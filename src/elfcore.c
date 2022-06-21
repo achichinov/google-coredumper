@@ -48,6 +48,7 @@ extern "C" {
 #include <string.h>
 #include <sys/poll.h>
 #include <sys/prctl.h>
+#include <sys/procfs.h>
 #include <sys/socket.h>
 #include <sys/sysctl.h>
 #include <sys/time.h>
@@ -73,10 +74,10 @@ extern "C" {
     #define O_LARGEFILE 0x2000
   #elif defined(__ARM_ARCH_3__)
     #define O_LARGEFILE 0400000
-  #elif defined(__aarch64__)
-    #define O_LARGEFILE  __O_LARGEFILE
   #elif defined(__PPC__) || defined(__ppc__)
     #define O_LARGEFILE 0200000
+  #elif defined(__O_LARGEFILE)
+    #define O_LARGEFILE  __O_LARGEFILE
   #else
     #define O_LARGEFILE 00100000 /* generic                                  */
   #endif
@@ -168,15 +169,7 @@ typedef struct elf_timeval {    /* Time value with microsecond resolution    */
   long tv_usec;                 /* Microseconds                              */
 } elf_timeval;
 
-#if !defined(__aarch64__)
-typedef struct elf_siginfo {    /* Information about signal (unused)         */
-  int32_t si_signo;             /* Signal number                             */
-  int32_t si_code;              /* Extra code                                */
-  int32_t si_errno;             /* Errno                                     */
-} elf_siginfo;
-#else
 typedef struct elf_siginfo elf_siginfo;
-#endif
 
 typedef struct prstatus {       /* Information about thread; includes CPU reg*/
   elf_siginfo    pr_info;       /* Info associated with signal               */
