@@ -1829,12 +1829,10 @@ int InternalGetCoreDump(void *frame, int num_threads, pid_t *pids,
   /* Get parent's CPU registers, and user data structure                     */
   {
     #ifndef __mips__
-    #ifndef __aarch64__ // PTRACE_PEEKUSER returns -1 and set errno = 5 (EIO 5 Input/output error)
     for (i = 0; i < sizeof(struct core_user); i += sizeof(int)) {
       sys_ptrace(PTRACE_PEEKUSER, pids[0], (void *)i,
                  ((char *)&user) + i);
     }
-    #endif
 
     /* Overwrite the regs from ptrace with the ones previously computed.  */
     memcpy(&user.regs, thread_regs, sizeof(struct regs));
