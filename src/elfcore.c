@@ -1775,25 +1775,22 @@ int InternalGetCoreDump(void *frame, int num_threads, pid_t *pids,
     #elif defined(__aarch64__)
     memset(scratch, 0xFF, sizeof(scratch));
     struct iovec scratch_iovec = { scratch, sizeof(scratch)};
-    if (sys_ptrace(PTRACE_GETREGSET, pids[i], (void*)NT_PRSTATUS, &scratch_iovec) == 0) {
-      memcpy(thread_regs + i, scratch, sizeof(struct regs));
-      if (main_pid == pids[i]) {
-        SET_FRAME(*(Frame *)frame, thread_regs[i]);
-      }
-      memset(scratch, 0xFF, sizeof(scratch));
-      scratch_iovec.iov_len = sizeof(scratch);
-      if (sys_ptrace(PTRACE_GETREGSET, pids[i], (void*)NT_FPREGSET, &scratch_iovec) == 0) {
-        memcpy(thread_fpregs + i, scratch, sizeof(struct fpregs));
-        memset(scratch, 0xFF, sizeof(scratch));
-        hasSSE = 0;
-      } else {
-        goto ptrace;
-      }
-    } else {
-   ptrace: /* Oh, well, undo everything and get out of here                  */
+    if (sys_ptrace(PTRACE_GETREGSET, pids[i], (void*)NT_PRSTATUS, &scratch_iovec) < 0) {
       ResumeAllProcessThreads(threads, pids);
       goto error;
     }
+    memcpy(thread_regs + i, scratch, sizeof(struct regs));
+    if (main_pid == pids[i]) {
+      SET_FRAME(*(Frame *)frame, thread_regs[i]);
+    }
+    memset(scratch, 0xFF, sizeof(scratch));
+    scratch_iovec.iov_len = sizeof(scratch);
+    if (sys_ptrace(PTRACE_GETREGSET, pids[i], (void*)NT_FPREGSET, &scratch_iovec) < 0) {
+      ResumeAllProcessThreads(threads, pids);
+      goto error;
+    }
+    memcpy(thread_fpregs + i, scratch, sizeof(struct fpregs));
+    hasSSE = 0;
     #else
     memset(scratch, 0xFF, sizeof(scratch));
     if (sys_ptrace(PTRACE_GETREGS, pids[i], scratch, scratch) == 0) {
