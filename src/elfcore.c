@@ -1853,7 +1853,8 @@ int InternalGetCoreDump(void *frame, int num_threads, pid_t *pids,
   prpsinfo.pr_gid   = sys_getegid();
   prpsinfo.pr_pid   = main_pid;
   prpsinfo.pr_ppid  = sys_getppid();
-  prpsinfo.pr_pgrp  = getpgrp();
+  prpsinfo.pr_pgrp  = getpgrp();    // syscall sys_getpgrp() is obsolete on arm64-linux.
+                                    // replaced it with getpgrp() that works on X86_64 and arm64-linux.
   prpsinfo.pr_sid   = sys_getsid(0);
   /* scope */ {
     char scratch[4096], *cmd = scratch, *ptr;
